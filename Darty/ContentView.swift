@@ -1,21 +1,11 @@
-//
-//  ContentView.swift
-//  Darty
-//
-//  Created by Mike Morelli on 2/14/26.
-//
-
 import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        WebView()
+            #if os(iOS)
+            .ignoresSafeArea()
+            #endif
     }
 }
 
