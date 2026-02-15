@@ -28,15 +28,18 @@ function AppRoutes() {
 }
 
 function App() {
-  // Use hash-based routing for file:// URLs (iOS WebView)
+  // Use hash-based routing for file:// URLs (iOS WebView) and GitHub Pages
+  // This avoids issues with base paths and makes routing work everywhere
   const isFileProtocol = typeof window !== 'undefined' && window.location.protocol === 'file:';
+  const isGitHubPages = typeof window !== 'undefined' && window.location.hostname.includes('github.io');
+  const useHashRouting = isFileProtocol || isGitHubPages;
   
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster />
-          {isFileProtocol ? (
+          {useHashRouting ? (
             <WouterRouter hook={useHashLocation}>
               <AppRoutes />
             </WouterRouter>
