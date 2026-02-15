@@ -29,10 +29,10 @@ struct WebView: UIViewRepresentable {
         webView.scrollView.alwaysBounceVertical = false
         webView.scrollView.alwaysBounceHorizontal = false
 
-        // Match the app's dark theme background
+        // Match the app's dark theme background exactly (#0a0a0a)
         webView.isOpaque = false
-        webView.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.18, alpha: 1.0)
-        webView.scrollView.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.18, alpha: 1.0)
+        webView.backgroundColor = UIColor(red: 0.039, green: 0.039, blue: 0.039, alpha: 1.0)
+        webView.scrollView.backgroundColor = UIColor(red: 0.039, green: 0.039, blue: 0.039, alpha: 1.0)
 
         // Set navigation delegate to keep links inside the WebView
         webView.navigationDelegate = context.coordinator

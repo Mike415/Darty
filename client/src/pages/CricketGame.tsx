@@ -1,13 +1,13 @@
 /**
  * Cricket Game Page — Mobile-First
- * 
+ *
  * Design: Precision Dark — optimized for phone screens.
  * Uses unified CricketGrid that merges marks display + score input.
  * Score panels stay above. Marks on the outside, input in the middle.
- * 
+ *
  * Undo system: stores a snapshot of the full game state before each dart.
  * Can undo one dart at a time, going back through previous turns indefinitely.
- * 
+ *
  * - Human turn: CricketGrid with shared tappable input
  * - AI turn: Dartboard in spectator mode with animated dart markers
  */
@@ -19,7 +19,7 @@ import { ArrowLeft, Undo2 } from 'lucide-react';
 import PostGameStats from '@/components/PostGameStats';
 import Dartboard, { DartMarker } from '@/components/Dartboard';
 import CricketGrid from '@/components/CricketGrid';
-import { DartSegment } from '@/lib/dartboard';
+import { DartSegment, MISS } from '@/lib/dartboard';
 import {
   GameConfig,
   CricketPlayerState,
@@ -77,6 +77,7 @@ export default function CricketGame() {
   const [aiMarkers, setAiMarkers] = useState<DartMarker[]>([]);
   const [aiTurnComplete, setAiTurnComplete] = useState(false);
   const [aiTurnResult, setAiTurnResult] = useState<{ darts: DartSegment[]; marks: number; points: number } | null>(null);
+  const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const aiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aiTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -256,7 +257,19 @@ export default function CricketGame() {
     setPlayerStates(result.newStates);
 
     const winResult = checkWin(result.newStates);
-    if (winResult !== null) { setIsGameOver(true); setWinner(winResult); return; }
+    if (winResult !== null) {
+      // Record the winning player's final turn stats before ending the game
+      const finalStates = [...result.newStates] as [CricketPlayerState, CricketPlayerState];
+      const winnerState = { ...finalStates[currentPlayer] };
+      winnerState.turnHistory = [...winnerState.turnHistory, { darts: newDarts, marksScored: newMarks, pointsScored: newPoints }];
+      winnerState.dartsThrown += newDarts.length;
+      winnerState.rounds += 1;
+      finalStates[currentPlayer] = winnerState;
+      setPlayerStates(finalStates);
+      setIsGameOver(true);
+      setWinner(winResult);
+      return;
+    }
     if (newDarts.length >= 3) {
       setTimeout(() => endTurn(newDarts, newMarks, newPoints, result.newStates, currentPlayer), 400);
     }
@@ -295,10 +308,50 @@ export default function CricketGame() {
   const canUndo = undoHistory.length > 0 && !aiThinking;
 
   return (
-    <div className="h-[100dvh] bg-background flex flex-col overflow-hidden max-w-lg mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-border flex-shrink-0">
-        <button onClick={() => setLocation('/')} className="p-1.5 -ml-1.5 rounded-lg text-muted-foreground active:text-foreground active:bg-accent">
+    <div className="h-full bg-background flex flex-col overflow-hidden">
+      {/* Quit confirmation dialog */}
+      <AnimatePresence>
+        {showQuitConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center px-6"
+            onClick={() => setShowQuitConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="w-full max-w-sm bg-card border border-border rounded-2xl p-5 shadow-2xl"
+            >
+              <h3 className="font-display font-bold text-lg text-foreground mb-2">Quit Game?</h3>
+              <p className="text-sm text-muted-foreground mb-5">
+                Quitting will lose all progress in this game.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowQuitConfirm(false)}
+                  className="flex-1 py-3 rounded-xl font-display font-bold text-sm bg-card border border-border text-foreground active:bg-accent transition-colors"
+                >
+                  Return
+                </button>
+                <button
+                  onClick={() => setLocation('/')}
+                  className="flex-1 py-3 rounded-xl font-display font-bold text-sm bg-destructive text-white active:bg-destructive/90 transition-colors"
+                >
+                  Quit
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Header with safe area padding */}
+      <div className="flex items-center justify-between px-4 py-2 pt-[calc(0.5rem+env(safe-area-inset-top))] border-b border-border flex-shrink-0">
+        <button onClick={() => isGameOver ? setLocation('/') : setShowQuitConfirm(true)} className="p-1.5 -ml-1.5 rounded-lg text-muted-foreground active:text-foreground active:bg-accent">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <span className="text-xs font-display font-bold text-muted-foreground tracking-wide uppercase">Cricket</span>
@@ -311,7 +364,7 @@ export default function CricketGame() {
         )}
       </div>
 
-      {/* Score panels */}
+      {/* Score panels - LARGER */}
       <div className="grid grid-cols-2 flex-shrink-0">
         {[0, 1].map(idx => {
           const state = playerStates[idx];
@@ -319,53 +372,58 @@ export default function CricketGame() {
           const isWinner = winner === idx;
           const textColor = idx === 0 ? 'text-neon' : 'text-info';
           return (
-            <div key={idx} className={`relative py-2.5 px-3 text-center transition-colors duration-300 ${
+            <div key={idx} className={`relative py-4 px-4 text-center transition-colors duration-300 ${
               isActive ? (idx === 0 ? 'bg-neon/8' : 'bg-info/8') : ''
             } ${idx === 0 ? 'border-r border-border/30' : ''}`}>
               {isActive && (
-                <div className={`absolute top-0 left-0 right-0 h-0.5 ${idx === 0 ? 'bg-neon' : 'bg-info'}`} />
+                <div className={`absolute top-0 left-0 right-0 h-1 ${idx === 0 ? 'bg-neon' : 'bg-info'}`} />
               )}
-              <div className={`text-[10px] font-display font-bold uppercase tracking-wider truncate ${
+              <div className={`text-xs font-display font-bold uppercase tracking-wider truncate ${
                 isActive ? textColor : 'text-muted-foreground'
               }`}>
                 {config.players[idx].name}
-                {isActive && <span className={`ml-1.5 inline-block w-1.5 h-1.5 rounded-full ${idx === 0 ? 'bg-neon' : 'bg-info'} animate-pulse align-middle`} />}
+                {isActive && <span className={`ml-1.5 inline-block w-2 h-2 rounded-full ${idx === 0 ? 'bg-neon' : 'bg-info'} animate-pulse align-middle`} />}
               </div>
               <motion.div
                 key={state.points}
                 initial={{ scale: 1.05 }}
                 animate={{ scale: 1 }}
-                className={`font-display text-2xl font-bold leading-none mt-0.5 ${
+                className={`font-display text-4xl font-bold leading-none mt-1 ${
                   isWinner ? 'text-neon glow-green-text' : 'text-foreground'
                 }`}
               >
                 {state.points}
               </motion.div>
-              <div className="text-[8px] text-muted-foreground/50 mt-0.5 font-display uppercase">Points</div>
+              <div className="text-[10px] text-muted-foreground/50 mt-1 font-display uppercase">Points</div>
             </div>
           );
         })}
       </div>
 
-      {/* Turn info bar */}
+      {/* Turn info bar - LARGER */}
       {!isGameOver && (
-        <div className="flex items-center justify-between px-3 py-1.5 border-y border-border flex-shrink-0 bg-card/30">
-          <div className="flex items-center gap-1.5">
+        <div className="flex items-center justify-between px-4 py-3 border-y border-border flex-shrink-0 bg-card/30">
+          <div className="flex items-center gap-2">
             {[0, 1, 2].map(i => (
-              <div key={i} className={`min-w-[36px] h-6 rounded-md flex items-center justify-center text-[9px] font-display font-bold px-1 transition-all duration-200 ${
+              <div key={i} className={`min-w-[48px] h-10 rounded-lg flex items-center justify-center text-sm font-display font-bold px-2 transition-all duration-200 ${
                 i < currentTurnDarts.length
                   ? 'bg-neon/15 text-neon border border-neon/30'
                   : i === currentTurnDarts.length
-                  ? 'border border-dashed border-neon/30 text-muted-foreground/40'
+                  ? 'border-2 border-dashed border-neon/30 text-muted-foreground/40'
                   : 'bg-card/30 border border-border/30 text-muted-foreground/15'
               }`}>
                 {i < currentTurnDarts.length ? currentTurnDarts[i].label : ''}
               </div>
             ))}
           </div>
-          <div className="flex items-center gap-2 text-[10px] font-display font-bold">
-            {turnMarks > 0 && <span className="text-neon">+{turnMarks} marks</span>}
-            {turnPoints > 0 && <span className="text-warning">+{turnPoints}pts</span>}
+          <div className="flex items-center gap-3 text-sm font-display font-bold">
+            {/* Only show marks/points after AI turn is complete, or during human turn */}
+            {(!aiThinking || aiTurnComplete) && (
+              <>
+                {turnMarks > 0 && <span className="text-neon">+{turnMarks} marks</span>}
+                {turnPoints > 0 && <span className="text-warning">+{turnPoints}pts</span>}
+              </>
+            )}
             {aiThinking && !aiTurnComplete && (
               <span className="text-neon/70 animate-pulse">{config.players[currentPlayer].name} throwing...</span>
             )}
@@ -374,7 +432,7 @@ export default function CricketGame() {
       )}
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col overflow-y-auto">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {isGameOver && winner !== null ? (
           <PostGameStats
             config={config}
@@ -434,6 +492,47 @@ export default function CricketGame() {
         ) : (
           /* Human turn — unified CricketGrid with marks + input merged */
           <div className="w-full py-2">
+            {/* Submit button - always visible, fills remaining darts with misses */}
+            <div className="px-4 mb-3">
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => {
+                  // Fill remaining darts with misses (including all 3 if none thrown)
+                  let darts = [...currentTurnDarts];
+                  const states = playerStates;
+                  const marks = turnMarks;
+                  const points = turnPoints;
+
+                  while (darts.length < 3) {
+                    // Save snapshot before each miss
+                    const snapshot: CricketSnapshot = {
+                      playerStates: [deepCloneCricketState(states[0]), deepCloneCricketState(states[1])],
+                      currentPlayer,
+                      currentTurnDarts: [...darts],
+                      turnMarks: marks,
+                      turnPoints: points,
+                    };
+                    setUndoHistory(prev => [...prev, snapshot]);
+                    darts.push(MISS);
+                  }
+
+                  // End the turn
+                  endTurn(darts, marks, points, states, currentPlayer);
+                }}
+                className={`w-full py-3 rounded-xl font-display font-bold text-sm flex items-center justify-center gap-2 ${
+                  currentTurnDarts.length >= 3
+                    ? 'bg-muted/20 text-muted-foreground border border-border/30'
+                    : 'bg-neon/20 text-neon border border-neon/30 active:bg-neon/30'
+                }`}
+                disabled={currentTurnDarts.length >= 3}
+              >
+                {currentTurnDarts.length >= 3
+                  ? 'Turn Complete'
+                  : currentTurnDarts.length === 0
+                  ? 'Submit Turn (3 misses)'
+                  : `Submit Turn (${3 - currentTurnDarts.length} miss${3 - currentTurnDarts.length !== 1 ? 'es' : ''})`}
+              </motion.button>
+            </div>
             <CricketGrid
               onScore={handleDartScore}
               disabled={inputDisabled}

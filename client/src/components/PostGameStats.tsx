@@ -1,6 +1,6 @@
 /**
  * PostGameStats — shown after game ends, before rematch/home.
- * 
+ *
  * Design: Precision Dark — detailed comparison of both players' performance.
  * X01: avg/turn, highest turn, 180s, 100+, checkout rate, darts thrown
  * Cricket: avg marks/round, total marks, total points, darts thrown, rounds
@@ -168,90 +168,95 @@ export default function PostGameStats({
   });
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full px-4 pt-4 pb-6">
-      {/* Victory banner */}
-      <div className="relative w-full h-24 rounded-2xl overflow-hidden mb-4">
-        <img src={VICTORY_IMG} alt="Victory" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
-        <div className="absolute bottom-3 left-0 right-0 text-center">
-          <Trophy className="w-6 h-6 text-warning mx-auto mb-1 drop-shadow-lg" />
-          <h2 className="font-display text-xl font-bold text-foreground">{config.players[winner].name} Wins!</h2>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full h-full flex flex-col">
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto px-4 pt-2">
+        {/* Victory banner */}
+        <div className="relative w-full h-24 rounded-2xl overflow-hidden mb-4 flex-shrink-0">
+          <img src={VICTORY_IMG} alt="Victory" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
+          <div className="absolute bottom-3 left-0 right-0 text-center">
+            <Trophy className="w-6 h-6 text-warning mx-auto mb-1 drop-shadow-lg" />
+            <h2 className="font-display text-xl font-bold text-foreground">{config.players[winner].name} Wins!</h2>
+          </div>
         </div>
+
+        {/* Stats table */}
+        <div className="rounded-2xl border border-border overflow-hidden mb-4">
+          {/* Player names header */}
+          <div className="grid grid-cols-[1fr_auto_1fr] bg-card/60 border-b border-border">
+            <div className={`py-2.5 px-3 text-center ${winner === 0 ? 'bg-neon/8' : ''}`}>
+              <span className={`text-xs font-display font-bold truncate ${winner === 0 ? 'text-neon' : 'text-foreground'}`}>
+                {config.players[0].name}
+              </span>
+            </div>
+            <div className="flex items-center px-1"><div className="w-px h-full bg-border" /></div>
+            <div className={`py-2.5 px-3 text-center ${winner === 1 ? 'bg-neon/8' : ''}`}>
+              <span className={`text-xs font-display font-bold truncate ${winner === 1 ? 'text-neon' : 'text-foreground'}`}>
+                {config.players[1].name}
+              </span>
+            </div>
+          </div>
+
+          {/* Stat rows */}
+          {statRows.map((row, i) => (
+            <div key={i} className={`grid grid-cols-[1fr_auto_1fr] ${i % 2 === 0 ? 'bg-card/30' : ''} ${i < statRows.length - 1 ? 'border-b border-border/50' : ''}`}>
+              <div className="py-2 px-3 text-center">
+                <span className={`text-sm font-display font-bold tabular-nums ${
+                  row.highlight === 0 ? 'text-neon' : 'text-foreground/70'
+                }`}>
+                  {row.values[0]}
+                </span>
+              </div>
+              <div className="flex items-center justify-center px-2 min-w-[80px]">
+                <span className="text-[10px] font-display font-bold text-muted-foreground uppercase tracking-wider text-center leading-tight">
+                  {row.label}
+                </span>
+              </div>
+              <div className="py-2 px-3 text-center">
+                <span className={`text-sm font-display font-bold tabular-nums ${
+                  row.highlight === 1 ? 'text-neon' : 'text-foreground/70'
+                }`}>
+                  {row.values[1]}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* View stats buttons */}
+        {savedPlayerIds.some(id => id !== null) && (
+          <div className="flex gap-2 mb-4">
+            {savedPlayerIds.map((id, idx) => id && onViewStats ? (
+              <button
+                key={idx}
+                onClick={() => onViewStats(id)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-card border border-border text-muted-foreground font-display font-bold text-xs active:bg-accent transition-colors"
+              >
+                <BarChart3 className="w-3.5 h-3.5" />
+                {config.players[idx].name} Stats
+              </button>
+            ) : null)}
+          </div>
+        )}
       </div>
 
-      {/* Stats table */}
-      <div className="rounded-2xl border border-border overflow-hidden mb-4">
-        {/* Player names header */}
-        <div className="grid grid-cols-[1fr_auto_1fr] bg-card/60 border-b border-border">
-          <div className={`py-2.5 px-3 text-center ${winner === 0 ? 'bg-neon/8' : ''}`}>
-            <span className={`text-xs font-display font-bold truncate ${winner === 0 ? 'text-neon' : 'text-foreground'}`}>
-              {config.players[0].name}
-            </span>
-          </div>
-          <div className="flex items-center px-1"><div className="w-px h-full bg-border" /></div>
-          <div className={`py-2.5 px-3 text-center ${winner === 1 ? 'bg-neon/8' : ''}`}>
-            <span className={`text-xs font-display font-bold truncate ${winner === 1 ? 'text-neon' : 'text-foreground'}`}>
-              {config.players[1].name}
-            </span>
-          </div>
+      {/* Fixed action buttons at bottom */}
+      <div className="flex-shrink-0 px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-background border-t border-border">
+        <div className="flex gap-3">
+          <button
+            onClick={onHome}
+            className="flex-1 py-3.5 rounded-xl bg-card border border-border text-foreground font-display font-bold text-sm active:bg-accent transition-colors flex items-center justify-center gap-2"
+          >
+            <Home className="w-4 h-4" /> Home
+          </button>
+          <button
+            onClick={onRematch}
+            className="flex-1 py-3.5 rounded-xl bg-neon text-background font-display font-bold text-sm active:bg-neon/90 flex items-center justify-center gap-2 transition-colors"
+          >
+            <RotateCcw className="w-4 h-4" /> Rematch
+          </button>
         </div>
-
-        {/* Stat rows */}
-        {statRows.map((row, i) => (
-          <div key={i} className={`grid grid-cols-[1fr_auto_1fr] ${i % 2 === 0 ? 'bg-card/30' : ''} ${i < statRows.length - 1 ? 'border-b border-border/50' : ''}`}>
-            <div className="py-2 px-3 text-center">
-              <span className={`text-sm font-display font-bold tabular-nums ${
-                row.highlight === 0 ? 'text-neon' : 'text-foreground/70'
-              }`}>
-                {row.values[0]}
-              </span>
-            </div>
-            <div className="flex items-center justify-center px-2 min-w-[80px]">
-              <span className="text-[10px] font-display font-bold text-muted-foreground uppercase tracking-wider text-center leading-tight">
-                {row.label}
-              </span>
-            </div>
-            <div className="py-2 px-3 text-center">
-              <span className={`text-sm font-display font-bold tabular-nums ${
-                row.highlight === 1 ? 'text-neon' : 'text-foreground/70'
-              }`}>
-                {row.values[1]}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* View stats buttons */}
-      {savedPlayerIds.some(id => id !== null) && (
-        <div className="flex gap-2 mb-4">
-          {savedPlayerIds.map((id, idx) => id && onViewStats ? (
-            <button
-              key={idx}
-              onClick={() => onViewStats(id)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-card border border-border text-muted-foreground font-display font-bold text-xs active:bg-accent transition-colors"
-            >
-              <BarChart3 className="w-3.5 h-3.5" />
-              {config.players[idx].name} Stats
-            </button>
-          ) : null)}
-        </div>
-      )}
-
-      {/* Action buttons */}
-      <div className="flex gap-3">
-        <button
-          onClick={onHome}
-          className="flex-1 py-3.5 rounded-xl bg-card border border-border text-foreground font-display font-bold text-sm active:bg-accent transition-colors flex items-center justify-center gap-2"
-        >
-          <Home className="w-4 h-4" /> Home
-        </button>
-        <button
-          onClick={onRematch}
-          className="flex-1 py-3.5 rounded-xl bg-neon text-background font-display font-bold text-sm active:bg-neon/90 flex items-center justify-center gap-2 transition-colors"
-        >
-          <RotateCcw className="w-4 h-4" /> Rematch
-        </button>
       </div>
     </motion.div>
   );

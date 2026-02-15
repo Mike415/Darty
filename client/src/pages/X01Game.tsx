@@ -1,10 +1,10 @@
 /**
  * X01 Game Page — Mobile-First
- * 
+ *
  * Design: Precision Dark — optimized for phone screens.
  * - Human turn: shows ScoreInput keypad (fast number entry)
  * - AI turn: shows Dartboard in spectator mode with animated dart markers
- * 
+ *
  * Undo system: stores a snapshot of the full game state before each dart.
  * Can undo one dart at a time, going back through previous turns indefinitely.
  */
@@ -75,6 +75,7 @@ export default function X01Game() {
   const [aiMarkers, setAiMarkers] = useState<DartMarker[]>([]);
   const [aiTurnComplete, setAiTurnComplete] = useState(false);
   const [aiTurnResult, setAiTurnResult] = useState<{ darts: DartSegment[]; total: number; bust: boolean } | null>(null);
+  const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const aiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aiTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -301,10 +302,50 @@ export default function X01Game() {
   const canUndo = undoHistory.length > 0 && !aiThinking;
 
   return (
-    <div className="h-[100dvh] bg-background flex flex-col overflow-hidden max-w-lg mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border flex-shrink-0">
-        <button onClick={() => setLocation('/')} className="p-1.5 -ml-1.5 rounded-lg text-muted-foreground active:text-foreground active:bg-accent">
+    <div className="h-full bg-background flex flex-col overflow-hidden">
+      {/* Quit confirmation dialog */}
+      <AnimatePresence>
+        {showQuitConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center px-6"
+            onClick={() => setShowQuitConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="w-full max-w-sm bg-card border border-border rounded-2xl p-5 shadow-2xl"
+            >
+              <h3 className="font-display font-bold text-lg text-foreground mb-2">Quit Game?</h3>
+              <p className="text-sm text-muted-foreground mb-5">
+                Quitting will lose all progress in this game.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowQuitConfirm(false)}
+                  className="flex-1 py-3 rounded-xl font-display font-bold text-sm bg-card border border-border text-foreground active:bg-accent transition-colors"
+                >
+                  Return
+                </button>
+                <button
+                  onClick={() => setLocation('/')}
+                  className="flex-1 py-3 rounded-xl font-display font-bold text-sm bg-destructive text-white active:bg-destructive/90 transition-colors"
+                >
+                  Quit
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Header with safe area padding */}
+      <div className="flex items-center justify-between px-4 py-2.5 pt-[calc(0.625rem+env(safe-area-inset-top))] border-b border-border flex-shrink-0">
+        <button onClick={() => isGameOver ? setLocation('/') : setShowQuitConfirm(true)} className="p-1.5 -ml-1.5 rounded-lg text-muted-foreground active:text-foreground active:bg-accent">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <span className="text-xs font-display font-bold text-muted-foreground tracking-wide">
@@ -419,7 +460,7 @@ export default function X01Game() {
       </AnimatePresence>
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col items-center justify-center overflow-y-auto px-4 py-3 relative">
+        <div className="flex-1 flex flex-col overflow-hidden px-4 py-3 relative">
         {isGameOver && winner !== null ? (
           <PostGameStats
             config={config}

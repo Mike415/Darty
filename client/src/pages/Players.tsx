@@ -1,6 +1,6 @@
 /**
  * Players Page — Mobile-First
- * 
+ *
  * Design: Precision Dark — manage saved player profiles.
  * Create, edit, delete players. Tap a player to view their stats.
  */
@@ -37,9 +37,9 @@ export default function Players() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-background flex flex-col max-w-lg mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
+    <div className="h-full bg-background flex flex-col">
+      {/* Header with safe area padding */}
+      <div className="flex items-center justify-between px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] border-b border-border flex-shrink-0">
         <button onClick={() => setLocation('/')} className="p-1.5 -ml-1.5 rounded-lg text-muted-foreground active:text-foreground active:bg-accent">
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -52,22 +52,22 @@ export default function Players() {
         </button>
       </div>
 
-      {/* Create player modal */}
+      {/* Create player modal - positioned at top to avoid keyboard */}
       <AnimatePresence>
         {showCreate && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center"
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-start justify-center pt-[calc(env(safe-area-inset-top)+1rem)]"
             onClick={() => setShowCreate(false)}
           >
             <motion.div
-              initial={{ y: 200 }}
-              animate={{ y: 0 }}
-              exit={{ y: 200 }}
+              initial={{ y: -50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -50, opacity: 0 }}
               onClick={e => e.stopPropagation()}
-              className="w-full max-w-lg bg-card border-t border-border rounded-t-3xl p-5 pb-8"
+              className="w-[calc(100%-2rem)] max-w-lg bg-card border border-border rounded-2xl p-5 shadow-2xl"
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-display font-bold text-lg text-foreground">New Player</h3>

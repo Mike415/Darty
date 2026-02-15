@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#0d0d14"/>
+    </linearGradient>
+
+    <!-- Neon glow filter -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="20" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Dart gradient -->
+    <linearGradient id="dartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00ff87"/>
+      <stop offset="100%" stop-color="#00cc6a"/>
+    </linearGradient>
+
+    <!-- Dartboard ring gradients -->
+    <radialGradient id="ringGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00ff87" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#00ff87" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="url(#bgGrad)"/>
+
+  <!-- Subtle dartboard rings in background -->
+  <circle cx="512" cy="512" r="400" fill="url(#ringGlow)"/>
+  <circle cx="512" cy="512" r="350" fill="none" stroke="#2a2a3e" stroke-width="40"/>
+  <circle cx="512" cy="512" r="280" fill="none" stroke="#1f1f2f" stroke-width="35"/>
+  <circle cx="512" cy="512" r="210" fill="none" stroke="#2a2a3e" stroke-width="30"/>
+  <circle cx="512" cy="512" r="140" fill="none" stroke="#1f1f2f" stroke-width="25"/>
+
+  <!-- Bullseye glow -->
+  <circle cx="512" cy="512" r="80" fill="none" stroke="#00ff87" stroke-width="4" opacity="0.5" filter="url(#glow)"/>
+  <circle cx="512" cy="512" r="50" fill="#00ff87" opacity="0.8"/>
+  <circle cx="512" cy="512" r="25" fill="#ffffff"/>
+
+  <!-- Dart (angled, dynamic pose) -->
+  <g transform="translate(512, 512) rotate(-45)" filter="url(#glow)">
+    <!-- Dart body -->
+    <path d="M-30,-180 L30,-180 L20,-60 L-20,-60 Z" fill="url(#dartGrad)"/>
+
+    <!-- Dart tip -->
+    <path d="M-15,-60 L15,-60 L0,60 Z" fill="#ffffff"/>
+
+    <!-- Dart flights (feathers) -->
+    <path d="M0,-180 L-60,-280 L0,-220 Z" fill="#ff4757" opacity="0.9"/>
+    <path d="M0,-180 L60,-280 L0,-220 Z" fill="#ff4757" opacity="0.9"/>
+    <path d="M0,-180 L0,-300 L20,-220 Z" fill="#ff6b7a" opacity="0.7"/>
+    <path d="M0,-180 L0,-300 L-20,-220 Z" fill="#ff6b7a" opacity="0.7"/>
+
+    <!-- Dart barrel rings -->
+    <rect x="-25" y="-170" width="50" height="8" rx="2" fill="#00cc6a"/>
+    <rect x="-25" y="-155" width="50" height="8" rx="2" fill="#00cc6a"/>
+    <rect x="-25" y="-140" width="50" height="8" rx="2" fill="#00cc6a"/>
+  </g>
+
+  <!-- Sparkle effects -->
+  <circle cx="380" cy="350" r="8" fill="#00ff87" opacity="0.8"/>
+  <circle cx="650" cy="400" r="6" fill="#00ff87" opacity="0.6"/>
+  <circle cx="420" cy="680" r="5" fill="#00ff87" opacity="0.5"/>
+  <circle cx="700" cy="600" r="7" fill="#00ff87" opacity="0.7"/>
+</svg>

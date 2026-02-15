@@ -1,6 +1,6 @@
 /**
  * Game Setup Page — Mobile-First
- * 
+ *
  * Design: Precision Dark — compact vertical layout for phone screens.
  * Integrates saved player profiles for stat tracking.
  * All controls are large and thumb-friendly. Scrollable if needed.
@@ -94,9 +94,9 @@ export default function GameSetup() {
   const isX01 = mode === 'x01';
 
   return (
-    <div className="min-h-[100dvh] bg-background flex flex-col max-w-lg mx-auto">
-      {/* Top bar */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border flex-shrink-0">
+    <div className="h-full bg-background flex flex-col">
+      {/* Top bar with safe area padding */}
+      <div className="flex items-center gap-3 px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] border-b border-border flex-shrink-0">
         <button onClick={() => setLocation('/')} className="p-1 -ml-1 text-muted-foreground active:text-foreground">
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -192,7 +192,7 @@ export default function GameSetup() {
         )}
       </AnimatePresence>
 
-      {/* Scrollable content */}
+      {/* Scrollable content - flex-1 to fill available space */}
       <div className="flex-1 overflow-y-auto px-4 py-5 space-y-5">
         {/* Opponent toggle */}
         <div>
@@ -340,10 +340,12 @@ export default function GameSetup() {
             </div>
           </>
         )}
+
+        {/* Start button - moved inside content area */}
       </div>
 
-      {/* Sticky start button */}
-      <div className="flex-shrink-0 p-4 pb-6 border-t border-border bg-background">
+      {/* Sticky Start button at bottom - fixed position */}
+      <div className="fixed bottom-0 left-0 right-0 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-background border-t border-border">
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={handleStart}
@@ -353,6 +355,9 @@ export default function GameSetup() {
           <ChevronRight className="w-5 h-5" />
         </motion.button>
       </div>
+
+      {/* Spacer to prevent content from being hidden behind fixed button */}
+      <div className="flex-shrink-0 h-[calc(5rem+env(safe-area-inset-bottom))]" />
     </div>
   );
 }

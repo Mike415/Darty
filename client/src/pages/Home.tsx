@@ -50,9 +50,9 @@ export default function Home() {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="h-[100dvh] bg-background flex flex-col overflow-hidden max-w-lg mx-auto">
-      {/* Hero section */}
-      <div className="relative flex-shrink-0 h-[36vh] min-h-[200px] max-h-[280px] overflow-hidden">
+    <div className="h-full bg-background flex flex-col overflow-hidden">
+      {/* Hero section with safe area padding */}
+      <div className="relative flex-shrink-0 h-[36vh] min-h-[200px] max-h-[280px] overflow-hidden pt-[env(safe-area-inset-top)]">
         <HeroBackground />
         <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-transparent to-background" />
         <div className="absolute bottom-0 left-0 right-0 px-5 pb-5">
@@ -63,7 +63,7 @@ export default function Home() {
             className="font-display text-3xl font-bold text-white leading-tight"
             style={{ textShadow: '0 2px 20px rgba(0,0,0,0.7)' }}
           >
-            Dart Counter
+            Darty
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 8 }}

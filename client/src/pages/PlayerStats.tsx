@@ -1,6 +1,6 @@
 /**
  * Player Stats Page — Mobile-First
- * 
+ *
  * Design: Precision Dark — detailed stats for a single player.
  * Filter by time period: Today, Week, Month, Year, All Time, or Custom range.
  * Shows X01 and Cricket stats in separate tabs.
@@ -88,9 +88,9 @@ export default function PlayerStats() {
   ];
 
   return (
-    <div className="min-h-[100dvh] bg-background flex flex-col max-w-lg mx-auto">
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border flex-shrink-0">
+    <div className="h-full bg-background flex flex-col">
+      {/* Header with safe area padding */}
+      <div className="flex items-center gap-3 px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] border-b border-border flex-shrink-0">
         <button onClick={() => setLocation('/players')} className="p-1.5 -ml-1.5 rounded-lg text-muted-foreground active:text-foreground active:bg-accent">
           <ArrowLeft className="w-5 h-5" />
         </button>
