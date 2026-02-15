@@ -94,7 +94,7 @@ export default function GameSetup() {
   const isX01 = mode === 'x01';
 
   return (
-    <div className="h-full bg-background flex flex-col">
+    <div className="h-full bg-background flex flex-col pb-[env(safe-area-inset-bottom)]">
       {/* Top bar with safe area padding */}
       <div className="flex items-center gap-3 px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] border-b border-border flex-shrink-0">
         <button onClick={() => setLocation('/')} className="p-1 -ml-1 text-muted-foreground active:text-foreground">
@@ -341,8 +341,7 @@ export default function GameSetup() {
           </>
         )}
 
-        {/* Spacer to prevent content from being hidden behind fixed button */}
-        <div className="h-24" />
+        {/* Start button - moved inside content area */}
       </div>
 
       {/* Sticky Start button at bottom - fixed position */}
@@ -356,6 +355,9 @@ export default function GameSetup() {
           <ChevronRight className="w-5 h-5" />
         </motion.button>
       </div>
+
+      {/* Spacer to prevent content from being hidden behind fixed button */}
+      <div className="flex-shrink-0 h-[calc(5rem+env(safe-area-inset-bottom))]" />
     </div>
   );
 }

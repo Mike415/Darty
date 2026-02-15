@@ -88,7 +88,7 @@ export default function PlayerStats() {
   ];
 
   return (
-    <div className="h-full bg-background flex flex-col">
+    <div className="h-full bg-background flex flex-col pb-[env(safe-area-inset-bottom)]">
       {/* Header with safe area padding */}
       <div className="flex items-center gap-3 px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] border-b border-border flex-shrink-0">
         <button onClick={() => setLocation('/players')} className="p-1.5 -ml-1.5 rounded-lg text-muted-foreground active:text-foreground active:bg-accent">

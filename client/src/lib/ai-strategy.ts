@@ -1,6 +1,6 @@
 /**
  * AI Strategy Engine
- * 
+ *
  * Smart targeting logic for X01 and Cricket game modes.
  * The strategy is always optimal regardless of difficulty level.
  * Difficulty only affects throw accuracy (spread), not decision-making.
@@ -435,4 +435,14 @@ export function getCheckoutSuggestion(remaining: number): string | null {
     const prefix = mult === 3 ? 'T' : mult === 2 ? 'D' : 'S';
     return `${prefix}${num}`;
   }).join(' → ');
+}
+
+/**
+ * Get the number of darts needed for checkout
+ */
+export function getCheckoutDartCount(remaining: number): number | null {
+  if (remaining > 170 || remaining < 2) return null;
+  const checkout = CHECKOUT_TABLE[remaining];
+  if (!checkout) return null;
+  return checkout.length;
 }

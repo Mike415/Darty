@@ -308,7 +308,7 @@ export default function CricketGame() {
   const canUndo = undoHistory.length > 0 && !aiThinking;
 
   return (
-    <div className="h-full bg-background flex flex-col overflow-hidden">
+    <div className="h-full bg-background flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom)]">
       {/* Quit confirmation dialog */}
       <AnimatePresence>
         {showQuitConfirm && (

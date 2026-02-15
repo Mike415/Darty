@@ -50,7 +50,7 @@ export default function Home() {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="h-full bg-background flex flex-col overflow-hidden">
+    <div className="h-full bg-background flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom)]">
       {/* Hero section with safe area padding */}
       <div className="relative flex-shrink-0 h-[36vh] min-h-[200px] max-h-[280px] overflow-hidden pt-[env(safe-area-inset-top)]">
         <HeroBackground />
@@ -157,7 +157,7 @@ export default function Home() {
       {/* Footer */}
       <div className="flex-shrink-0 px-5 pb-4 text-center">
         <p className="text-[10px] text-muted-foreground/40 font-display">
-          Built with precision. Play with passion.
+          Play with passion.
         </p>
       </div>
     </div>

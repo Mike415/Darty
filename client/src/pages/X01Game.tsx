@@ -302,7 +302,7 @@ export default function X01Game() {
   const canUndo = undoHistory.length > 0 && !aiThinking;
 
   return (
-    <div className="h-full bg-background flex flex-col overflow-hidden">
+    <div className="h-full bg-background flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom)]">
       {/* Quit confirmation dialog */}
       <AnimatePresence>
         {showQuitConfirm && (
@@ -366,6 +366,10 @@ export default function X01Game() {
           const state = playerStates[idx];
           const isActive = currentPlayer === idx && !isGameOver;
           const isWinner = winner === idx;
+          // For active player, show checkout based on current remaining (after darts this turn)
+          // For inactive player, show checkout based on their full remaining
+          const effectiveRemaining = isActive ? state.remaining - turnScore : state.remaining;
+          const checkoutPath = getCheckoutSuggestion(effectiveRemaining);
           return (
             <div key={idx} className={`relative py-3 px-3 text-center transition-colors duration-300 ${
               isActive ? (idx === 0 ? 'bg-neon/8' : 'bg-info/8') : ''
@@ -379,7 +383,7 @@ export default function X01Game() {
                 {config.players[idx].name}
               </div>
               <motion.div
-                key={state.remaining}
+                key={isActive ? effectiveRemaining : state.remaining}
                 initial={{ scale: 1.08, opacity: 0.7 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 25 }}
@@ -387,11 +391,16 @@ export default function X01Game() {
                   isWinner ? 'text-neon glow-green-text' : isActive ? 'text-foreground' : 'text-muted-foreground/60'
                 }`}
               >
-                {isWinner ? '✓' : state.remaining}
+                {isWinner ? '✓' : isActive ? effectiveRemaining : state.remaining}
               </motion.div>
               <div className="text-[10px] text-muted-foreground/70 mt-1 font-display">
                 Avg {state.stats.averagePerTurn.toFixed(1)}
               </div>
+              {checkoutPath && !isGameOver && !isBust && (
+                <div className="text-[9px] text-neon/80 font-display font-bold mt-0.5 truncate">
+                  {checkoutPath}
+                </div>
+              )}
             </div>
           );
         })}
@@ -445,22 +454,22 @@ export default function X01Game() {
         </div>
       )}
 
-      {/* AI thinking indicator */}
-      <AnimatePresence>
-        {aiThinking && !aiTurnComplete && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="px-4 py-2 text-xs text-neon/80 font-display font-bold flex-shrink-0 bg-neon/5 text-center border-b border-neon/10"
-          >
-            <span className="animate-pulse">{config.players[currentPlayer].name} is throwing...</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Main content area */}
-        <div className="flex-1 flex flex-col overflow-hidden px-4 py-3 relative">
+      <div className="flex-1 flex flex-col overflow-hidden px-4 py-3 relative">
+        {/* AI thinking indicator - overlaid on top */}
+        <AnimatePresence>
+          {aiThinking && !aiTurnComplete && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute top-0 left-0 right-0 z-10 px-4 py-2 text-xs text-neon/80 font-display font-bold bg-neon/10 backdrop-blur-sm text-center border-b border-neon/20"
+            >
+              <span className="animate-pulse">{config.players[currentPlayer].name} is throwing...</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {isGameOver && winner !== null ? (
           <PostGameStats
             config={config}
@@ -473,7 +482,7 @@ export default function X01Game() {
           />
         ) : isAiTurn ? (
           /* AI turn — show dartboard with animated markers + result overlay */
-          <div className="w-full relative">
+          <div className="w-full relative pt-8">
             <Dartboard spectatorMode markers={aiMarkers} />
 
             <AnimatePresence>

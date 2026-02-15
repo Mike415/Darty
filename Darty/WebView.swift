@@ -29,6 +29,9 @@ struct WebView: UIViewRepresentable {
         webView.scrollView.alwaysBounceVertical = false
         webView.scrollView.alwaysBounceHorizontal = false
 
+        // Don't add automatic safe area insets - CSS handles this via env()
+        webView.scrollView.contentInsetAdjustmentBehavior = .never
+
         // Match the app's dark theme background exactly (#0a0a0a)
         webView.isOpaque = false
         webView.backgroundColor = UIColor(red: 0.039, green: 0.039, blue: 0.039, alpha: 1.0)
