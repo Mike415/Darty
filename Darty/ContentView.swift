@@ -4,7 +4,8 @@ struct ContentView: View {
     var body: some View {
         WebView()
             #if os(iOS)
-            .ignoresSafeArea()
+            .ignoresSafeArea(.all, edges: .all)
+            .edgesIgnoringSafeArea(.all)
             #endif
     }
 }

@@ -341,7 +341,8 @@ export default function GameSetup() {
           </>
         )}
 
-        {/* Start button - moved inside content area */}
+        {/* Spacer to prevent content from being hidden behind fixed button */}
+        <div className="h-24" />
       </div>
 
       {/* Sticky Start button at bottom - fixed position */}
@@ -355,9 +356,6 @@ export default function GameSetup() {
           <ChevronRight className="w-5 h-5" />
         </motion.button>
       </div>
-
-      {/* Spacer to prevent content from being hidden behind fixed button */}
-      <div className="flex-shrink-0 h-[calc(5rem+env(safe-area-inset-bottom))]" />
     </div>
   );
 }
