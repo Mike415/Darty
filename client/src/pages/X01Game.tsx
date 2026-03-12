@@ -24,6 +24,7 @@ import {
   createInitialX01State,
 } from '@/lib/game-types';
 import { executeAiX01Turn, getCheckoutSuggestion } from '@/lib/ai-strategy';
+import { resetSessionBias } from '@/lib/dartboard';
 
 // Victory image moved to PostGameStats component
 const _VICTORY_IMG = 'https://private-us-east-1.manuscdn.com/sessionFile/tppsv2qntT8KQaqeNNRWhC/sandbox/dchVwPMByFmCuapungHC0j-img-3_1770986408000_na1fn_dmljdG9yeS1zY2VuZQ.png?x-oss-process=image/resize,w_1920,h_1920/format,webp/quality,q_80&Expires=1798761600&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvdHBwc3YycW50VDhLUWFxZU5OUldoQy9zYW5kYm94L2RjaFZ3UE1CeUZtQ3VhcHVuZ0hDMGotaW1nLTNfMTc3MDk4NjQwODAwMF9uYTFmbl9kbWxqZEc5eWVTMXpZMlZ1WlEucG5nP3gtb3NzLXByb2Nlc3M9aW1hZ2UvcmVzaXplLHdfMTkyMCxoXzE5MjAvZm9ybWF0LHdlYnAvcXVhbGl0eSxxXzgwIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=tx0qcSVo85rWdAOfpE3K6n9suyjqaFQpgCf9TvwT5POs1hT-zLZdhCIkjgNWuTpk1OphQ0m3C304d6faLkzfe9KbDDcxx9Aso1xSPytV1Ry-9ypD9YsHcgaEMIjJd4689fFBz5MK76ZpOP7p9RiUx2eUUX8ue8MWoo43RrEdjsXMuoen6N2wcYIW6SOpJeUAb24obHfz0t7H6vx1dhvyM9b8e~v0RCv9Pw8Jgjb1UN7O8BGyPDULX4AwskS9F1xVwPS2rHsLzIhxQ0b6qbHMmkrKkaWVb3M6sWjTOwea3f-ySlWvDqqSjuwl2MCCrLgHMuOHCQYTBSPOAy9TS-hTFw__';
@@ -95,6 +96,8 @@ export default function X01Game() {
       createInitialX01State(cfg.x01StartScore || 501),
       createInitialX01State(cfg.x01StartScore || 501),
     ]);
+    // Reset per-session bias so each new game gets a fresh player "form"
+    resetSessionBias();
   }, [setLocation]);
 
   // AI turn

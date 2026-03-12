@@ -156,18 +156,66 @@ function gaussianRandom(): number {
 
 /**
  * AI Throw Simulation
- * 
- * The AI aims at a target point on the board and applies Gaussian noise.
+ *
+ * Simulates a realistic human dart throw using a multi-factor accuracy model:
+ *
+ * 1. POLAR COORDINATE NOISE — Noise is applied in polar space (angular and radial
+ *    components independently) rather than raw Cartesian X/Y. This better models
+ *    how real throws miss: angular errors push the dart into adjacent number segments,
+ *    while radial errors push it into the wrong scoring ring (e.g., single instead
+ *    of triple). Angular spread is scaled by the target radius so that the arc length
+ *    of the angular miss is consistent regardless of how far from center the target is.
+ *
+ * 2. ELLIPTICAL (VERTICAL) BIAS — Human throws have more variance in the vertical
+ *    (radial) direction than the horizontal (angular) direction due to release-timing
+ *    sensitivity. A 1.25× multiplier is applied to radial spread to reproduce this
+ *    natural elongation of the shot grouping.
+ *
+ * 3. SYSTEMATIC PLAYER BIAS — Each throw carries a small, consistent offset that
+ *    represents a player's habitual pull or push. A per-session bias vector is
+ *    generated once and decays slowly, simulating a player who is "running hot" or
+ *    "pulling left" on a given night. The bias magnitude scales with inaccuracy so
+ *    that high-difficulty (expert) players are nearly unaffected.
+ *
+ * 4. BULLSEYE FIX — The target for any bullseye attempt is always dead center (0, 0).
+ *    The previous logic placed the single-bull target on a random point on the outer
+ *    bull ring, which artificially inflated hit rates. Now both single and double bull
+ *    attempts aim from the same origin; the spread alone determines whether the dart
+ *    lands in the double bull, single bull, or beyond.
+ *
  * Difficulty 1 = very inaccurate (large spread), Difficulty 10 = very accurate (small spread).
- * 
- * The spread is applied in both angular and radial directions independently,
- * which naturally causes darts to land on adjacent segments when inaccurate.
- * 
- * @param targetNumber - The number the AI is aiming for (0 for bull)
+ *
+ * @param targetNumber - The number the AI is aiming for (0 or 25 for bull)
  * @param targetMultiplier - 1=single, 2=double, 3=triple
  * @param difficulty - 1-10 difficulty level
  * @returns The segment where the dart actually lands
  */
+
+// Per-session bias state — represents a player's habitual lean on a given session.
+// Regenerated lazily; decays slightly each throw to simulate natural correction.
+let sessionBiasX = 0;
+let sessionBiasY = 0;
+let sessionBiasInitialized = false;
+
+function getSessionBias(spreadMM: number): { bx: number; by: number } {
+  if (!sessionBiasInitialized) {
+    // Bias is a fraction of the current spread — subtle but consistent
+    sessionBiasX = gaussianRandom() * spreadMM * 0.3;
+    sessionBiasY = gaussianRandom() * spreadMM * 0.3;
+    sessionBiasInitialized = true;
+  }
+  // Slowly drift the bias each throw (mean-revert toward zero)
+  sessionBiasX *= 0.97;
+  sessionBiasY *= 0.97;
+  return { bx: sessionBiasX, by: sessionBiasY };
+}
+
+export function resetSessionBias(): void {
+  sessionBiasInitialized = false;
+  sessionBiasX = 0;
+  sessionBiasY = 0;
+}
+
 export function aiThrow(
   targetNumber: number,
   targetMultiplier: 1 | 2 | 3,
@@ -175,37 +223,68 @@ export function aiThrow(
 ): DartSegment {
   const isBull = targetNumber === 0 || targetNumber === 25;
 
-  // Calculate target point in cartesian coordinates
+  // ── 1. Determine the target point ────────────────────────────────────────
+  // For bullseye, always aim at dead center (0, 0).
+  // For numbered segments, aim at the center of the target zone.
   let targetX: number, targetY: number;
+  let targetAngle: number, targetRadius: number;
 
   if (isBull) {
-    // Aiming at bull - target is center
-    const targetRadius = targetMultiplier === 2 ? 0 : (BOARD_RADII.DOUBLE_BULL + BOARD_RADII.SINGLE_BULL) / 2;
-    // Random angle for bull since it's circular
-    const randomAngle = Math.random() * 360;
-    const point = polarToCartesian(randomAngle, targetRadius);
-    targetX = point.x;
-    targetY = point.y;
+    targetX = 0;
+    targetY = 0;
+    targetAngle = 0;
+    targetRadius = 0;
   } else {
-    const targetAngle = getSegmentCenterAngle(targetNumber);
-    const targetRadius = getTargetRadius(targetMultiplier);
+    targetAngle = getSegmentCenterAngle(targetNumber);
+    targetRadius = getTargetRadius(targetMultiplier);
     const point = polarToCartesian(targetAngle, targetRadius);
     targetX = point.x;
     targetY = point.y;
   }
 
-  // Calculate spread based on difficulty
-  // Difficulty 1: ~60mm standard deviation (very wild)
-  // Difficulty 5: ~25mm standard deviation (moderate)
-  // Difficulty 10: ~4mm standard deviation (very precise)
-  // Using exponential decay for more natural feel
+  // ── 2. Calculate base spread from difficulty ──────────────────────────────
+  // Difficulty 1:  ~60 mm std-dev (very wild)
+  // Difficulty 5:  ~25 mm std-dev (moderate)
+  // Difficulty 10: ~4  mm std-dev (very precise)
   const spreadMM = 70 * Math.exp(-0.28 * difficulty);
 
-  // Apply Gaussian noise to x and y independently
-  const actualX = targetX + gaussianRandom() * spreadMM;
-  const actualY = targetY + gaussianRandom() * spreadMM;
+  // ── 3. Apply noise in polar coordinates ──────────────────────────────────
+  // Angular spread is expressed as an arc-length equivalent at the target
+  // radius, then converted to degrees. This keeps the angular miss consistent
+  // regardless of whether we're aiming at the bull or the doubles ring.
+  // A minimum effective radius prevents division-by-zero at the center.
+  const effectiveRadius = Math.max(targetRadius, BOARD_RADII.SINGLE_BULL);
 
-  // Determine where the dart actually landed
+  // Angular noise: arc-length spread divided by radius → degrees
+  const angularSpreadDeg = (spreadMM / effectiveRadius) * (180 / Math.PI);
+  const angularNoise = gaussianRandom() * angularSpreadDeg;
+
+  // Radial noise: 1.25× multiplier for the natural vertical (release-timing) bias
+  const radialSpreadMM = spreadMM * 1.25;
+  const radialNoise = gaussianRandom() * radialSpreadMM;
+
+  const actualAngle = targetAngle + angularNoise;
+  const actualRadius = Math.max(0, targetRadius + radialNoise);
+
+  // Convert back to Cartesian
+  let actualX: number, actualY: number;
+  if (isBull) {
+    // For bull, apply noise directly in Cartesian since target is (0,0)
+    actualX = gaussianRandom() * spreadMM;
+    actualY = gaussianRandom() * radialSpreadMM;
+  } else {
+    const actualPoint = polarToCartesian(actualAngle, actualRadius);
+    actualX = actualPoint.x;
+    actualY = actualPoint.y;
+  }
+
+  // ── 4. Apply systematic player bias ──────────────────────────────────────
+  // Bias magnitude scales with spread so expert players are nearly unaffected.
+  const { bx, by } = getSessionBias(spreadMM);
+  actualX += bx;
+  actualY += by;
+
+  // ── 5. Determine which segment the dart landed in ─────────────────────────
   return getSegmentAtPoint(actualX, actualY);
 }
 
